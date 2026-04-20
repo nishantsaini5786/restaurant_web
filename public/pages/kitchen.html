@@ -7,35 +7,354 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Inter&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    body { background: #0a0505; font-family: 'Inter', sans-serif; color: #f5e7d9; padding: 2rem; }
-    .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 1.5rem; margin-top: 2rem; }
-    .kitchen-card { background: #1f1111; border-radius: 1rem; padding: 1rem; border-left: 4px solid #D4AF37; }
-    .order-id { font-family: 'Cinzel', serif; color: #D4AF37; }
-    button { background: #D4AF37; border: none; padding: 5px 12px; border-radius: 20px; cursor: pointer; margin-top: 10px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: linear-gradient(135deg, #0a0505 0%, #1a0a0a 100%);
+      font-family: 'Inter', sans-serif; 
+      color: #f5e7d9; 
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .header h1 {
+      font-family: 'Cinzel', serif;
+      color: #D4AF37;
+      font-size: 1.8rem;
+    }
+    .live-badge {
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid #4CAF50;
+      border-radius: 20px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .live-dot {
+      width: 10px;
+      height: 10px;
+      background: #4CAF50;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: #1f1111;
+      border-radius: 1rem;
+      padding: 1rem 1.5rem;
+      border: 1px solid rgba(212,175,55,0.3);
+    }
+    .stat-card .count {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #D4AF37;
+    }
+    
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .filters button {
+      background: #2a1a1a;
+      border: 1px solid rgba(212,175,55,0.3);
+      padding: 8px 20px;
+      border-radius: 20px;
+      color: #c9aa5f;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .filters button.active {
+      background: rgba(212,175,55,0.2);
+      border-color: #D4AF37;
+      color: #D4AF37;
+    }
+    .filters button:hover {
+      background: rgba(212,175,55,0.1);
+    }
+    
+    .orders-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); 
+      gap: 1.5rem; 
+    }
+    
+    .kitchen-card { 
+      background: linear-gradient(145deg, #1f1111, #180d0d);
+      border-radius: 1rem; 
+      padding: 1.2rem; 
+      border-left: 4px solid #D4AF37;
+      transition: transform 0.2s;
+    }
+    .kitchen-card:hover { transform: translateY(-3px); }
+    
+    .order-id { 
+      font-family: 'Cinzel', serif; 
+      color: #D4AF37;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .customer-info {
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid rgba(212,175,55,0.2);
+    }
+    .customer-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+    .table-info {
+      font-size: 0.8rem;
+      color: #c9aa5f;
+      margin-top: 4px;
+    }
+    
+    .items-list {
+      margin: 0.8rem 0;
+    }
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .item-name { color: #f5e7d9; }
+    .item-qty { color: #D4AF37; font-weight: bold; }
+    
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.8rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid rgba(212,175,55,0.2);
+    }
+    .total-amount {
+      font-family: 'Cinzel', serif;
+      color: #D4AF37;
+      font-size: 1.1rem;
+    }
+    .btn-ready {
+      background: #2e7d32;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 20px;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-ready:hover { background: #1b5e20; transform: scale(1.02); }
+    
+    .empty-state {
+      text-align: center;
+      padding: 4rem;
+      color: #c9aa5f;
+      grid-column: 1/-1;
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+    
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .toast {
+      background: #2e7d32;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-top: 10px;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .orders-grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 1.3rem; }
+    }
   </style>
 </head>
 <body>
-  <h1><i class="fas fa-fire-burner"></i> Kitchen Live Orders</h1>
-  <div class="orders-grid" id="kitchenOrders"></div>
-  <script>
-    async function loadOrders() {
-      const res = await fetch('/api/admin/orders?status=pending&limit=30');
-      const data = await res.json();
-      document.getElementById('kitchenOrders').innerHTML = data.orders.map(o => `
-        <div class="kitchen-card">
-          <div class="order-id">${o.orderId}</div>
-          <div><strong>${o.customerName}</strong> | Table ${o.tableNumber}</div>
-          <div>${o.items.map(i=>`${i.name} x${i.quantity}`).join(', ')}</div>
-          <button onclick="markReady('${o.orderId}')">✅ Mark Ready</button>
+
+<div class="header">
+  <h1><i class="fas fa-fire-burner"></i> BHOSDIKA Kitchen</h1>
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    <span>LIVE ORDERS</span>
+  </div>
+</div>
+
+<div class="stats-row" id="statsRow">
+  <div class="stat-card"><span>📋 Pending</span><div class="count" id="pendingCount">0</div></div>
+  <div class="stat-card"><span>✅ Completed Today</span><div class="count" id="completedCount">0</div></div>
+</div>
+
+<div class="filters">
+  <button class="active" onclick="filterOrders('pending')">⏳ Pending Orders</button>
+  <button onclick="filterOrders('all')">📋 All Orders</button>
+  <button onclick="filterOrders('completed')">✅ Completed</button>
+  <button onclick="refreshOrders()"><i class="fas fa-sync-alt"></i> Refresh</button>
+</div>
+
+<div class="orders-grid" id="kitchenOrders">
+  <div class="empty-state"><i class="fas fa-spinner fa-pulse"></i><p>Loading orders...</p></div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// IMPORTANT: Render Backend URL - YAHAN APNA RENDER URL DALO
+const API_BASE_URL = 'https://restaurant-web-wbq0.onrender.com';
+
+let currentFilter = 'pending';
+
+// Show Toast
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Load Orders
+async function loadOrders() {
+  try {
+    let url = '/api/admin/orders?limit=100';
+    if (currentFilter !== 'all') url += `&status=${currentFilter}`;
+    
+    const response = await fetch(`${API_BASE_URL}${url}`);
+    const data = await response.json();
+    
+    if (!data.success || !data.orders) {
+      document.getElementById('kitchenOrders').innerHTML = '<div class="empty-state"><i class="fas fa-utensils"></i><p>No orders found</p></div>';
+      return;
+    }
+    
+    const orders = data.orders;
+    
+    // Update stats
+    const pendingOrders = orders.filter(o => o.orderStatus === 'pending').length;
+    const completedToday = orders.filter(o => {
+      if (o.orderStatus !== 'completed') return false;
+      const today = new Date().toDateString();
+      return new Date(o.createdAt).toDateString() === today;
+    }).length;
+    
+    document.getElementById('pendingCount').innerHTML = pendingOrders;
+    document.getElementById('completedCount').innerHTML = completedToday;
+    
+    if (orders.length === 0) {
+      document.getElementById('kitchenOrders').innerHTML = '<div class="empty-state"><i class="fas fa-check-double"></i><p>No ' + currentFilter + ' orders</p></div>';
+      return;
+    }
+    
+    document.getElementById('kitchenOrders').innerHTML = orders.map(o => `
+      <div class="kitchen-card" data-order-id="${o.orderId}">
+        <div class="order-id"><i class="fas fa-hashtag"></i> ${o.orderId}</div>
+        <div class="customer-info">
+          <div class="customer-name">${o.customerName}</div>
+          <div class="table-info"><i class="fas fa-phone"></i> ${o.mobile} | <i class="fas fa-chair"></i> Table ${o.tableNumber} | <i class="fas fa-users"></i> ${o.members} guests</div>
+          <div class="table-info"><i class="fas fa-star"></i> ${o.tableType}</div>
         </div>
-      `).join('');
-    }
-    async function markReady(id) {
-      await fetch(`/api/admin/orders/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderStatus: 'completed' }) });
+        <div class="items-list">
+          ${o.items.map(item => `
+            <div class="item-row">
+              <span class="item-name">${item.name}</span>
+              <span class="item-qty">x${item.quantity}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="card-footer">
+          <span class="total-amount">₹${o.finalAmount}</span>
+          ${o.orderStatus === 'pending' ? 
+            `<button class="btn-ready" onclick="markReady('${o.orderId}')"><i class="fas fa-check"></i> Ready to Serve</button>` : 
+            `<span style="color:#81C784"><i class="fas fa-check-circle"></i> Completed at ${new Date(o.updatedAt || o.createdAt).toLocaleTimeString()}</span>`
+          }
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (error) {
+    console.error('Load orders error:', error);
+    document.getElementById('kitchenOrders').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading orders. Check backend connection.</p></div>';
+  }
+}
+
+// Mark Order as Ready (Completed)
+async function markReady(orderId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderStatus: 'completed' })
+    });
+    const data = await response.json();
+    
+    if (data.success) {
+      showToast(`Order ${orderId} is ready! 🍽️`, 'success');
+      // Play sound effect (optional)
+      const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+      audio.volume = 0.3;
+      audio.play().catch(e => console.log('Audio play failed'));
       loadOrders();
+    } else {
+      showToast('Failed to update order', 'error');
     }
-    loadOrders();
-    setInterval(loadOrders, 8000);
-  </script>
+  } catch (error) {
+    console.error('Mark ready error:', error);
+    showToast('Error updating order', 'error');
+  }
+}
+
+// Filter Orders
+function filterOrders(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filters button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  loadOrders();
+}
+
+// Refresh Orders
+function refreshOrders() {
+  loadOrders();
+  showToast('Orders refreshed', 'success');
+}
+
+// Auto refresh every 10 seconds
+loadOrders();
+setInterval(loadOrders, 10000);
+</script>
 </body>
 </html>

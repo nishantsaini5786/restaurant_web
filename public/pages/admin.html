@@ -15,7 +15,6 @@
       min-height: 100vh;
     }
     
-    /* Login Box */
     .login-box { 
       max-width: 400px; 
       margin: 100px auto; 
@@ -49,7 +48,6 @@
       font-size: 1rem;
     }
     
-    /* Dashboard */
     .dashboard-container { padding: 2rem; max-width: 1400px; margin: 0 auto; }
     .dashboard-header {
       display: flex;
@@ -75,7 +73,6 @@
     }
     .logout-btn:hover { background: #c62828; }
     
-    /* Stats Cards */
     .stats { 
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); 
@@ -99,7 +96,6 @@
     }
     .stat-card .stat-label { color: #c9aa5f; font-size: 0.85rem; }
     
-    /* Tabs */
     .admin-tabs {
       display: flex;
       gap: 1rem;
@@ -125,7 +121,6 @@
     }
     .admin-tab:hover { color: #D4AF37; }
     
-    /* Filters */
     .filters {
       display: flex;
       gap: 1rem;
@@ -140,7 +135,6 @@
       color: white;
     }
     
-    /* Table */
     .table-container {
       overflow-x: auto;
       background: #1a0e0e;
@@ -166,7 +160,6 @@
     }
     .status-pending { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
     .status-completed { background: rgba(76, 175, 80, 0.2); color: #81C784; }
-    .status-preparing { background: rgba(33, 150, 243, 0.2); color: #64B5F6; }
     
     .action-btn {
       padding: 5px 12px;
@@ -211,7 +204,6 @@
       to { transform: translateX(0); opacity: 1; }
     }
     
-    /* Customer Details Modal */
     .modal {
       display: none;
       position: fixed;
@@ -295,10 +287,8 @@
       </div>
     </div>
     
-    <!-- Stats Cards -->
     <div class="stats" id="stats"></div>
     
-    <!-- Tabs -->
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchTab('orders')">📋 Orders</button>
       <button class="admin-tab" onclick="switchTab('customers')">👥 Customers</button>
@@ -324,22 +314,9 @@
       <div class="table-container">
         <table id="ordersTable">
           <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Mobile</th>
-              <th>Table</th>
-              <th>Items</th>
-              <th>Total (₹)</th>
-              <th>Status</th>
-              <th>Payment</th>
-              <th>Time</th>
-              <th>Action</th>
-             </tr>
+            <tr><th>Order ID</th><th>Customer</th><th>Mobile</th><th>Table</th><th>Items</th><th>Total</th><th>Status</th><th>Payment</th><th>Time</th><th>Action</th></tr>
           </thead>
-          <tbody id="ordersBody">
-            <tr><td colspan="10" style="text-align:center">Loading...</td></tr>
-          </tbody>
+          <tbody id="ordersBody"><tr><td colspan="10" class="empty-state">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -348,68 +325,52 @@
     <div id="customersSection" style="display:none;">
       <div class="filters">
         <input type="text" id="customerSearch" placeholder="Search by name or mobile..." onkeyup="searchCustomers()" style="flex:1;">
-        <button class="action-btn btn-export" onclick="exportCustomersCSV()">
-          <i class="fas fa-file-excel"></i> Export CSV
-        </button>
-        <button class="action-btn btn-export" onclick="loadCustomers()">
-          <i class="fas fa-sync-alt"></i> Refresh
-        </button>
+        <button class="action-btn btn-export" onclick="exportCustomersCSV()">Export CSV</button>
+        <button class="action-btn btn-export" onclick="loadCustomers()">Refresh</button>
       </div>
-      
       <div class="table-container">
         <table id="customersTable">
-          <thead>
-            <tr>
-              <th>Customer ID</th>
-              <th>Name</th>
-              <th>Mobile</th>
-              <th>Total Visits</th>
-              <th>Total Spent (₹)</th>
-              <th>Last Visit</th>
-              <th>Favorite Items</th>
-              <th>Action</th>
-             </tr>
-          </thead>
-          <tbody id="customersBody">
-            <tr><td colspan="8" style="text-align:center">Loading customers...</td></tr>
-          </tbody>
+          <thead><tr><th>Name</th><th>Mobile</th><th>Visits</th><th>Spent</th><th>Last Visit</th><th>Favorites</th><th>Action</th></tr></thead>
+          <tbody id="customersBody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Customer Details Modal -->
+<!-- Customer Modal -->
 <div id="customerModal" class="modal">
   <div class="modal-content">
-    <div class="modal-header">
-      <h3><i class="fas fa-user"></i> Customer Details</h3>
-      <button class="close-modal" onclick="closeModal()">&times;</button>
-    </div>
+    <div class="modal-header"><h3>Customer Details</h3><button class="close-modal" onclick="closeModal()">&times;</button></div>
     <div id="modalBody"></div>
   </div>
 </div>
 
 <script>
-// ADMIN PASSWORD - Changed to "salonisaini"
+// IMPORTANT: Render Backend URL - YAHAN APNA RENDER URL DALO
+const API_BASE_URL = 'https://restaurant-web-wbq0.onrender.com';
+
+// Admin Password
 const ADMIN_PASSWORD = 'salonisaini';
 
 let currentTab = 'orders';
 let allCustomers = [];
 
-// Login Function
+// API Helper Function
+async function apiCall(endpoint, options = {}) {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers }
+  });
+  return response.json();
+}
+
+// Login
 async function login() {
   const pass = document.getElementById('adminPass').value;
-  
-  if (!pass) {
-    showToast('Please enter password', 'error');
-    return;
-  }
-  
-  if (pass !== ADMIN_PASSWORD) {
-    showToast('Wrong password!', 'error');
-    return;
-  }
+  if (!pass) { showToast('Please enter password', 'error'); return; }
+  if (pass !== ADMIN_PASSWORD) { showToast('Wrong password!', 'error'); return; }
   
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
@@ -417,19 +378,16 @@ async function login() {
   await loadStats();
   await loadOrders();
   await loadCustomers();
-  
   showToast('Login successful!', 'success');
 }
 
-// Logout Function
 function logout() {
   document.getElementById('loginView').style.display = 'block';
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('adminPass').value = '';
-  showToast('Logged out successfully', 'info');
+  showToast('Logged out', 'info');
 }
 
-// Switch Tabs
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.admin-tab').forEach((t, i) => {
@@ -450,94 +408,51 @@ function switchTab(tab) {
 // Load Stats
 async function loadStats() {
   try {
-    const res = await fetch('/api/admin/stats');
-    const data = await res.json();
-    
+    const data = await apiCall('/api/admin/stats');
     if (data.success) {
       document.getElementById('stats').innerHTML = `
-        <div class="stat-card">
-          <i class="fas fa-shopping-bag"></i>
-          <div class="stat-value">${data.stats.totalOrders}</div>
-          <div class="stat-label">Total Orders</div>
-        </div>
-        <div class="stat-card">
-          <i class="fas fa-users"></i>
-          <div class="stat-value">${data.stats.totalCustomers || 0}</div>
-          <div class="stat-label">Total Customers</div>
-        </div>
-        <div class="stat-card">
-          <i class="fas fa-calendar-day"></i>
-          <div class="stat-value">${data.stats.todayOrders}</div>
-          <div class="stat-label">Today's Orders</div>
-        </div>
-        <div class="stat-card">
-          <i class="fas fa-clock"></i>
-          <div class="stat-value">${data.stats.pendingOrders}</div>
-          <div class="stat-label">Pending</div>
-        </div>
-        <div class="stat-card">
-          <i class="fas fa-check-circle"></i>
-          <div class="stat-value">${data.stats.completedOrders}</div>
-          <div class="stat-label">Completed</div>
-        </div>
-        <div class="stat-card">
-          <i class="fas fa-rupee-sign"></i>
-          <div class="stat-value">₹${data.stats.totalRevenue.toFixed(0)}</div>
-          <div class="stat-label">Total Revenue</div>
-        </div>
+        <div class="stat-card"><div class="stat-value">${data.stats.totalOrders}</div><div class="stat-label">Total Orders</div></div>
+        <div class="stat-card"><div class="stat-value">${data.stats.totalCustomers || 0}</div><div class="stat-label">Customers</div></div>
+        <div class="stat-card"><div class="stat-value">${data.stats.todayOrders}</div><div class="stat-label">Today's Orders</div></div>
+        <div class="stat-card"><div class="stat-value">${data.stats.pendingOrders}</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card"><div class="stat-value">${data.stats.completedOrders}</div><div class="stat-label">Completed</div></div>
+        <div class="stat-card"><div class="stat-value">₹${data.stats.totalRevenue.toFixed(0)}</div><div class="stat-label">Revenue</div></div>
       `;
     }
-  } catch (error) {
-    console.error('Stats error:', error);
-  }
+  } catch (error) { console.error('Stats error:', error); }
 }
 
 // Load Orders
 async function loadOrders() {
   try {
     const status = document.getElementById('statusFilter')?.value || 'all';
-    const date = document.getElementById('dateFilter')?.value || '';
-    
     let url = '/api/admin/orders?limit=100';
     if (status !== 'all') url += `&status=${status}`;
     
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await apiCall(url);
     
     if (!data.success || !data.orders) {
       document.getElementById('ordersBody').innerHTML = '<tr><td colspan="10" class="empty-state">No orders found</td></tr>';
       return;
     }
     
-    let orders = data.orders;
-    
-    if (date) {
-      orders = orders.filter(o => new Date(o.createdAt).toDateString() === new Date(date).toDateString());
-    }
-    
-    if (orders.length === 0) {
-      document.getElementById('ordersBody').innerHTML = '<tr><td colspan="10" class="empty-state">📭 No orders found</td></tr>';
-      return;
-    }
-    
-    document.getElementById('ordersBody').innerHTML = orders.map(o => `
+    document.getElementById('ordersBody').innerHTML = data.orders.map(o => `
       <tr>
-        <td><strong style="color:#D4AF37">${o.orderId}</strong></td>
+        <td><strong>${o.orderId}</strong></td>
         <td>${o.customerName}</td>
         <td>${o.mobile}</td>
-        <td>T-${o.tableNumber} (${o.tableType})</td>
-        <td style="max-width:200px; font-size:0.8rem;">${o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
-        <td><strong>₹${o.finalAmount}</strong></td>
+        <td>T-${o.tableNumber}</td>
+        <td>${o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
+        <td>₹${o.finalAmount}</td>
         <td><span class="status-badge status-${o.orderStatus}">${o.orderStatus}</span></td>
-        <td><span class="status-badge" style="background:${o.paymentStatus === 'pending' ? 'rgba(255,193,7,0.2)' : 'rgba(76,175,80,0.2)'}; color:${o.paymentStatus === 'pending' ? '#FFC107' : '#81C784'}">${o.paymentStatus === 'pending' ? '⏳ Pending' : '✅ Paid'}</span></td>
-        <td style="font-size:0.75rem;">${new Date(o.createdAt).toLocaleString()}</td>
+        <td><span class="status-badge">${o.paymentStatus === 'pending' ? 'Pending' : 'Paid'}</span></td>
+        <td>${new Date(o.createdAt).toLocaleString()}</td>
         <td>
-          ${o.orderStatus !== 'completed' ? `<button class="action-btn btn-complete" onclick="updateStatus('${o.orderId}', 'completed')"><i class="fas fa-check"></i> Done</button>` : ''}
-          ${o.paymentStatus === 'pending' ? `<button class="action-btn btn-paid" onclick="markPaid('${o.orderId}')"><i class="fas fa-rupee-sign"></i> Paid</button>` : ''}
+          ${o.orderStatus !== 'completed' ? `<button class="action-btn btn-complete" onclick="updateStatus('${o.orderId}', 'completed')">Done</button>` : ''}
+          ${o.paymentStatus === 'pending' ? `<button class="action-btn btn-paid" onclick="markPaid('${o.orderId}')">Paid</button>` : ''}
         </td>
       </tr>
     `).join('');
-    
   } catch (error) {
     console.error('Load orders error:', error);
     document.getElementById('ordersBody').innerHTML = '<tr><td colspan="10" class="empty-state">Error loading orders</td></tr>';
@@ -547,189 +462,118 @@ async function loadOrders() {
 // Load Customers
 async function loadCustomers() {
   try {
-    const res = await fetch('/api/admin/customers');
-    const data = await res.json();
-    
+    const data = await apiCall('/api/admin/customers');
     if (data.success && data.customers) {
       allCustomers = data.customers;
       displayCustomers(allCustomers);
-      console.log(`✅ Loaded ${allCustomers.length} customers`);
     } else {
-      document.getElementById('customersBody').innerHTML = '<tr><td colspan="8" class="empty-state">No customers found</td></tr>';
+      document.getElementById('customersBody').innerHTML = '<tr><td colspan="7" class="empty-state">No customers found</td></tr>';
     }
   } catch (error) {
     console.error('Load customers error:', error);
-    document.getElementById('customersBody').innerHTML = '<tr><td colspan="8" class="empty-state">Error loading customers</td></tr>';
   }
 }
 
-// Display Customers
 function displayCustomers(customers) {
   if (customers.length === 0) {
-    document.getElementById('customersBody').innerHTML = '<tr><td colspan="8" class="empty-state">No customers found</td></tr>';
+    document.getElementById('customersBody').innerHTML = '<tr><td colspan="7" class="empty-state">No customers found</td></tr>';
     return;
   }
-  
   document.getElementById('customersBody').innerHTML = customers.map(c => `
     <tr>
-      <td><small>${c.customerId || '-'}</small></td>
       <td><strong>${c.name}</strong></td>
       <td>${c.mobile}</td>
       <td>${c.totalVisits || 1}</td>
       <td>₹${(c.totalSpent || 0).toFixed(2)}</td>
-      <td><small>${c.lastVisit ? new Date(c.lastVisit).toLocaleDateString() : '-'}</small></td>
-      <td style="max-width:150px; font-size:0.75rem;">${(c.favoriteItems || []).slice(0, 3).join(', ')}</td>
-      <td>
-        <button class="action-btn btn-view" onclick="viewCustomerDetails('${c.mobile}')">
-          <i class="fas fa-eye"></i> View
-        </button>
-      </td>
+      <td>${c.lastVisit ? new Date(c.lastVisit).toLocaleDateString() : '-'}</td>
+      <td>${(c.favoriteItems || []).slice(0, 2).join(', ')}</td>
+      <td><button class="action-btn btn-view" onclick="viewCustomerDetails('${c.mobile}')">View</button></td>
     </tr>
   `).join('');
 }
 
-// Search Customers
 function searchCustomers() {
-  const searchTerm = document.getElementById('customerSearch').value.toLowerCase();
-  if (!searchTerm) {
-    displayCustomers(allCustomers);
-    return;
-  }
-  
-  const filtered = allCustomers.filter(c => 
-    c.name.toLowerCase().includes(searchTerm) || 
-    c.mobile.includes(searchTerm)
-  );
+  const term = document.getElementById('customerSearch').value.toLowerCase();
+  if (!term) { displayCustomers(allCustomers); return; }
+  const filtered = allCustomers.filter(c => c.name.toLowerCase().includes(term) || c.mobile.includes(term));
   displayCustomers(filtered);
 }
 
 // View Customer Details
 async function viewCustomerDetails(mobile) {
   try {
-    const res = await fetch(`/api/admin/customers/${mobile}`);
-    const data = await res.json();
-    
+    const data = await apiCall(`/api/admin/customers/${mobile}`);
     if (data.success) {
-      const customer = data.customer;
+      const c = data.customer;
       const orders = data.orders || [];
-      
-      const modalBody = document.getElementById('modalBody');
-      modalBody.innerHTML = `
-        <div class="customer-detail-row"><strong>Name:</strong> <span>${customer.name}</span></div>
-        <div class="customer-detail-row"><strong>Mobile:</strong> <span>${customer.mobile}</span></div>
-        <div class="customer-detail-row"><strong>Customer ID:</strong> <span>${customer.customerId || '-'}</span></div>
-        <div class="customer-detail-row"><strong>Total Visits:</strong> <span>${customer.totalVisits}</span></div>
-        <div class="customer-detail-row"><strong>Total Spent:</strong> <span>₹${(customer.totalSpent || 0).toFixed(2)}</span></div>
-        <div class="customer-detail-row"><strong>Last Visit:</strong> <span>${customer.lastVisit ? new Date(customer.lastVisit).toLocaleString() : '-'}</span></div>
-        <div class="customer-detail-row"><strong>Favorite Items:</strong> <span>${(customer.favoriteItems || []).join(', ') || '-'}</span></div>
-        <div class="customer-detail-row"><strong>Member Since:</strong> <span>${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : '-'}</span></div>
-        <div style="margin-top: 1rem;">
-          <h4 style="color:#D4AF37">Order History (${orders.length})</h4>
-          ${orders.length > 0 ? `
-            <table style="width:100%; margin-top:0.5rem; font-size:0.8rem;">
-              <thead><tr><th>Order ID</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
-              <tbody>
-                ${orders.map(o => `
-                  <tr><td>${o.orderId}</td><td>${new Date(o.createdAt).toLocaleDateString()}</td><td>₹${o.finalAmount}</td><td>${o.orderStatus}</td></tr>
-                `).join('')}
-              </tbody>
-            </table>
-          ` : '<p>No orders yet</p>'}
+      document.getElementById('modalBody').innerHTML = `
+        <div class="customer-detail-row"><strong>Name:</strong> <span>${c.name}</span></div>
+        <div class="customer-detail-row"><strong>Mobile:</strong> <span>${c.mobile}</span></div>
+        <div class="customer-detail-row"><strong>Total Visits:</strong> <span>${c.totalVisits}</span></div>
+        <div class="customer-detail-row"><strong>Total Spent:</strong> <span>₹${(c.totalSpent || 0).toFixed(2)}</span></div>
+        <div class="customer-detail-row"><strong>Favorite Items:</strong> <span>${(c.favoriteItems || []).join(', ') || '-'}</span></div>
+        <div style="margin-top:1rem"><h4 style="color:#D4AF37">Orders (${orders.length})</h4>
+          ${orders.map(o => `<div class="customer-detail-row"><span>${o.orderId}</span><span>${new Date(o.createdAt).toLocaleDateString()}</span><span>₹${o.finalAmount}</span></div>`).join('')}
         </div>
       `;
-      
       document.getElementById('customerModal').style.display = 'flex';
     }
-  } catch (error) {
-    showToast('Error loading customer details', 'error');
-  }
+  } catch (error) { showToast('Error loading details', 'error'); }
 }
 
-// Close Modal
-function closeModal() {
-  document.getElementById('customerModal').style.display = 'none';
-}
+function closeModal() { document.getElementById('customerModal').style.display = 'none'; }
 
-// Update Order Status
+// Update Status
 async function updateStatus(orderId, status) {
   try {
-    const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+    const res = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderStatus: status })
     });
     const data = await res.json();
-    
     if (data.success) {
-      showToast(`Order ${orderId} marked as ${status}`, 'success');
-      await loadOrders();
-      await loadStats();
-    } else {
-      showToast('Update failed', 'error');
+      showToast(`Order ${orderId} completed`, 'success');
+      loadOrders(); loadStats();
     }
-  } catch (error) {
-    showToast('Error updating order', 'error');
-  }
+  } catch (error) { showToast('Error', 'error'); }
 }
 
-// Mark Payment as Paid
+// Mark Paid
 async function markPaid(orderId) {
   try {
-    const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+    const res = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paymentStatus: 'paid_counter' })
     });
     const data = await res.json();
-    
     if (data.success) {
-      showToast(`Payment marked as paid for ${orderId}`, 'success');
-      await loadOrders();
-      await loadStats();
-    } else {
-      showToast('Update failed', 'error');
+      showToast(`Payment marked paid`, 'success');
+      loadOrders(); loadStats();
     }
-  } catch (error) {
-    showToast('Error updating payment', 'error');
-  }
+  } catch (error) { showToast('Error', 'error'); }
 }
 
-// Export Orders CSV
-function exportToCSV() {
-  window.open('/api/export-csv', '_blank');
-  showToast('Exporting orders to CSV...', 'success');
-}
-
-// Export Customers CSV
+// Export CSV
+function exportToCSV() { window.open(`${API_BASE_URL}/api/export-csv`, '_blank'); showToast('Exporting...', 'success'); }
 function exportCustomersCSV() {
-  let csvData = "Customer ID,Name,Mobile,Total Visits,Total Spent,Last Visit,Favorite Items,Joined Date\n";
-  
-  allCustomers.forEach(c => {
-    csvData += `"${c.customerId || ''}","${c.name}","${c.mobile}",${c.totalVisits || 1},${c.totalSpent || 0},"${c.lastVisit || ''}","${(c.favoriteItems || []).join('; ')}","${c.createdAt || ''}"\n`;
-  });
-  
-  const blob = new Blob([csvData], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
+  let csv = "Name,Mobile,Visits,Spent,Last Visit,Favorites\n";
+  allCustomers.forEach(c => csv += `"${c.name}","${c.mobile}",${c.totalVisits},${c.totalSpent},"${c.lastVisit}","${(c.favoriteItems || []).join(';')}"\n`);
+  const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
-  a.href = url;
-  a.download = 'customers_export.csv';
+  a.href = URL.createObjectURL(blob);
+  a.download = 'customers.csv';
   a.click();
-  URL.revokeObjectURL(url);
-  showToast('Exporting customers to CSV...', 'success');
+  showToast('Exporting...', 'success');
 }
 
-// Refresh Data
 function refreshData() {
-  if (currentTab === 'orders') {
-    loadOrders();
-  } else {
-    loadCustomers();
-  }
+  if (currentTab === 'orders') loadOrders();
+  else loadCustomers();
   loadStats();
-  showToast('Data refreshed', 'success');
+  showToast('Refreshed', 'success');
 }
-
-// Clear Filters
 function clearFilters() {
   if (document.getElementById('statusFilter')) document.getElementById('statusFilter').value = 'all';
   if (document.getElementById('dateFilter')) document.getElementById('dateFilter').value = '';
@@ -738,25 +582,18 @@ function clearFilters() {
   if (currentTab === 'customers') loadCustomers();
 }
 
-// Show Toast
-function showToast(message, type = 'info') {
-  const container = document.getElementById('toastContainer');
+function showToast(msg, type) {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
-  toast.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
-  container.appendChild(toast);
+  toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+  document.getElementById('toastContainer').appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Auto refresh every 30 seconds
 setInterval(() => {
   if (document.getElementById('dashboard').style.display === 'block') {
-    if (currentTab === 'orders') {
-      loadOrders();
-    } else {
-      loadCustomers();
-    }
+    if (currentTab === 'orders') loadOrders();
+    else loadCustomers();
     loadStats();
   }
 }, 30000);

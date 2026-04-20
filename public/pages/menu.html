@@ -33,6 +33,15 @@
       background-clip: text;
       color: transparent;
     }
+    .nav-info {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      background: rgba(212,175,55,0.1);
+      padding: 5px 15px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+    }
     .cart-btn {
       background: rgba(212, 175, 55, 0.15);
       border: 1px solid #D4AF37;
@@ -123,16 +132,47 @@
       cursor: pointer;
       margin-top: 1rem;
     }
+    .btn-order:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #fff;
+      border-top-color: #B8860B;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .toast {
+      background: #2e7d32;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.error { background: #c62828; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
     @media (max-width: 900px) {
       .menu-layout { grid-template-columns: 1fr; }
       .cart-side { position: fixed; right: 0; top: 0; width: 350px; transform: translateX(100%); transition: 0.3s; z-index: 200; height: 100vh; }
       .cart-side.open { transform: translateX(0); }
+      .nav-info { display: none; }
     }
   </style>
 </head>
 <body>
   <nav class="top-nav">
     <div class="nav-brand">BHOSDIKA</div>
+    <div class="nav-info" id="navInfo"></div>
     <button class="cart-btn" onclick="toggleCart()"><i class="fas fa-shopping-cart"></i> Cart (<span id="cartCount">0</span>)</button>
   </nav>
   <div class="menu-layout">
@@ -149,6 +189,9 @@
   <div class="toast-container" id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:1000;"></div>
 
   <script>
+    // IMPORTANT: Render Backend URL - YAHAN APNA RENDER URL DALO
+    const API_BASE_URL = 'https://restaurant-web-wbq0.onrender.com';
+
     const menuData = [
       { id:1, name:'Paneer Tikka', desc:'Grilled cottage cheese', price:249, cat:'Starters', emoji:'🔥' },
       { id:2, name:'Butter Chicken', desc:'Creamy tomato gravy', price:349, cat:'Mains', emoji:'🍗' },
@@ -156,12 +199,42 @@
       { id:4, name:'Garlic Naan', desc:'Fresh baked', price:59, cat:'Breads', emoji:'🫓' },
       { id:5, name:'Chicken Biryani', desc:'Hyderabadi style', price:379, cat:'Rice', emoji:'🍛' },
       { id:6, name:'Gulab Jamun', desc:'Sweet dessert', price:129, cat:'Desserts', emoji:'🍮' },
-      { id:7, name:'Mango Lassi', desc:'Yogurt drink', price:99, cat:'Drinks', emoji:'🥭' }
+      { id:7, name:'Mango Lassi', desc:'Yogurt drink', price:99, cat:'Drinks', emoji:'🥭' },
+      { id:8, name:'Veg Biryani', desc:'Fragrant basmati rice', price:279, cat:'Rice', emoji:'🍚' },
+      { id:9, name:'Tandoori Roti', desc:'Whole wheat bread', price:25, cat:'Breads', emoji:'🥖' },
+      { id:10, name:'Malai Kofta', desc:'Creamy vegetable dumplings', price:299, cat:'Mains', emoji:'🧆' }
     ];
+    
     let cart = {};
     let activeCat = 'All';
+    let isPlacingOrder = false;
+    
     const customer = JSON.parse(sessionStorage.getItem('customerData') || '{}');
-    if (!customer.name) window.location.href = '/';
+    if (!customer.name) {
+      window.location.href = 'index.html';
+    }
+
+    // Show Nav Info
+    function showNavInfo() {
+      const navInfo = document.getElementById('navInfo');
+      if (navInfo) {
+        navInfo.innerHTML = `
+          <span><i class="fas fa-user"></i> ${customer.name}</span>
+          <span><i class="fas fa-chair"></i> T-${customer.tableNumber}</span>
+          <span><i class="fas fa-star"></i> ${customer.tableType}</span>
+        `;
+      }
+    }
+
+    // Show Toast
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
 
     function renderMenu() {
       const items = activeCat === 'All' ? menuData : menuData.filter(i => i.cat === activeCat);
@@ -200,43 +273,90 @@
       const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
       const gst = customer.tableType === '5 Star' ? subtotal * 0.18 : 0;
       const total = subtotal + gst;
+      
       document.getElementById('cartItemsList').innerHTML = items.map(i => `
         <div class="cart-item"><span>${i.name} x${i.qty}</span><span>₹${i.price * i.qty}</span></div>
       `).join('') || '<div style="text-align:center;padding:2rem">Cart empty</div>';
+      
       document.getElementById('cartSummary').innerHTML = `
-        <div>Subtotal: ₹${subtotal}</div>
-        ${gst ? `<div>GST 18%: ₹${gst.toFixed(2)}</div>` : ''}
+        <div>Subtotal: ₹${subtotal.toFixed(2)}</div>
+        ${gst ? `<div>GST 18%: ₹${gst.toFixed(2)}</div>` : '<div>GST: NIL</div>'}
         <div style="font-size:1.2rem;font-weight:bold;margin:10px 0">Total: ₹${total.toFixed(2)}</div>
-        <button class="btn-order" onclick="placeOrder()">Place Order →</button>
+        <button class="btn-order" onclick="placeOrder()" ${items.length === 0 ? 'disabled' : ''}>Place Order →</button>
       `;
     }
 
     async function placeOrder() {
       const items = Object.values(cart);
-      if (items.length === 0) return alert('Add items first');
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: customer.name,
-          mobile: customer.mobile,
-          members: customer.members,
-          tableType: customer.tableType,
-          tableNumber: customer.tableNumber,
-          items: items.map(i => ({ name: i.name, price: i.price, quantity: i.qty }))
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        sessionStorage.setItem('lastOrder', JSON.stringify(data));
-        window.location.href = '/payment';
+      if (items.length === 0) {
+        showToast('Please add items to cart', 'error');
+        return;
+      }
+      
+      if (isPlacingOrder) return;
+      isPlacingOrder = true;
+      
+      const btn = document.querySelector('.btn-order');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<div class="spinner"></div> Placing...';
+      btn.disabled = true;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: customer.name,
+            mobile: customer.mobile,
+            members: parseInt(customer.members),
+            tableType: customer.tableType,
+            tableNumber: parseInt(customer.tableNumber),
+            items: items.map(i => ({ name: i.name, price: i.price, quantity: i.qty }))
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          sessionStorage.setItem('lastOrder', JSON.stringify({
+            orderId: data.orderId,
+            finalAmount: data.finalAmount,
+            gstAmount: data.gstAmount,
+            tableType: customer.tableType,
+            customerName: customer.name
+          }));
+          showToast('Order placed successfully! 🎉', 'success');
+          setTimeout(() => {
+            window.location.href = 'payment.html';
+          }, 1000);
+        } else {
+          showToast(data.message || 'Failed to place order', 'error');
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          isPlacingOrder = false;
+        }
+      } catch (error) {
+        console.error('Place order error:', error);
+        showToast('Network error. Please try again.', 'error');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        isPlacingOrder = false;
       }
     }
 
-    function toggleCart() { document.getElementById('cartSide').classList.toggle('open'); }
+    function toggleCart() { 
+      document.getElementById('cartSide').classList.toggle('open'); 
+    }
+    
+    // Initialize
     const cats = ['All', ...new Set(menuData.map(i => i.cat))];
-    document.getElementById('categoryTabs').innerHTML = cats.map(c => `<button class="cat-tab ${c === 'All' ? 'active' : ''}" onclick="activeCat='${c}';renderMenu();document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active')">${c}</button>`).join('');
-    renderMenu(); updateCartUI();
+    document.getElementById('categoryTabs').innerHTML = cats.map(c => 
+      `<button class="cat-tab ${c === 'All' ? 'active' : ''}" onclick="activeCat='${c}';renderMenu();document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active')">${c}</button>`
+    ).join('');
+    
+    showNavInfo();
+    renderMenu(); 
+    updateCartUI();
   </script>
 </body>
 </html>

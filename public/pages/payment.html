@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: linear-gradient(135deg, #0a0505 0%, #1a0a0a 100%);
       font-family: 'Inter', sans-serif;
@@ -15,6 +16,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 2rem;
     }
     .payment-card {
       background: rgba(20, 10, 10, 0.9);
@@ -23,47 +25,285 @@
       border: 1px solid rgba(212, 175, 55, 0.4);
       padding: 2rem;
       max-width: 500px;
-      width: 90%;
+      width: 100%;
       text-align: center;
       animation: fadeIn 0.5s;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    .order-id { font-family: 'Cinzel', serif; font-size: 1.5rem; color: #D4AF37; margin: 1rem 0; }
-    .bill-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .pay-options { display: flex; gap: 1rem; margin: 1.5rem 0; }
-    .pay-btn { flex: 1; padding: 12px; border-radius: 40px; border: 1px solid #D4AF37; background: transparent; color: #D4AF37; cursor: pointer; transition: 0.2s; }
-    .pay-btn:hover { background: rgba(212,175,55,0.2); }
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: scale(0.95); } 
+      to { opacity: 1; transform: scale(1); } 
+    }
+    .success-icon {
+      width: 70px;
+      height: 70px;
+      background: rgba(76, 175, 80, 0.2);
+      border: 2px solid #4CAF50;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .success-icon i { font-size: 2rem; color: #81C784; }
+    h1 { font-family: 'Cinzel', serif; font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .order-id { 
+      font-family: 'Cinzel', serif; 
+      font-size: 1.3rem; 
+      color: #D4AF37; 
+      margin: 0.5rem 0;
+      background: rgba(212,175,55,0.1);
+      padding: 8px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    .copy-btn {
+      background: none;
+      border: none;
+      color: #c9aa5f;
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin-left: 8px;
+    }
+    .copy-btn:hover { color: #D4AF37; }
+    .bill-card {
+      background: rgba(0,0,0,0.3);
+      border-radius: 1rem;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      text-align: left;
+    }
+    .bill-row { 
+      display: flex; 
+      justify-content: space-between; 
+      padding: 8px 0; 
+      border-bottom: 1px solid rgba(255,255,255,0.1); 
+    }
+    .bill-row.total {
+      border-bottom: none;
+      border-top: 1px solid rgba(212,175,55,0.3);
+      margin-top: 5px;
+      padding-top: 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+    .pay-options { 
+      display: flex; 
+      gap: 1rem; 
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+    .pay-btn { 
+      flex: 1; 
+      padding: 12px; 
+      border-radius: 40px; 
+      border: 1px solid #D4AF37; 
+      background: transparent; 
+      color: #D4AF37; 
+      cursor: pointer; 
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+    .pay-btn:hover { background: rgba(212,175,55,0.2); transform: translateY(-2px); }
+    .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    
+    .new-order-link {
+      color: #c9aa5f;
+      margin-top: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+    .new-order-link:hover { color: #D4AF37; gap: 10px; }
+    
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #fff;
+      border-top-color: #B8860B;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .toast {
+      background: #2e7d32;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.error { background: #c62828; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @media (max-width: 550px) {
+      .payment-card { padding: 1.5rem; }
+      .pay-options { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
-  <div class="payment-card">
-    <i class="fas fa-check-circle" style="font-size: 3rem; color: #4caf50;"></i>
-    <h1>Order Confirmed!</h1>
-    <div class="order-id" id="orderId">---</div>
-    <div id="billDetails"></div>
-    <div class="pay-options">
-      <button class="pay-btn" onclick="payAtCounter()"><i class="fas fa-store"></i> Pay at Counter</button>
-      <button class="pay-btn" onclick="payOnline()"><i class="fas fa-mobile-alt"></i> Pay Online (2% off)</button>
-    </div>
-    <a href="/" style="color:#c9aa5f; margin-top:1rem; display:inline-block;">← New Order</a>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="payment-card">
+  <div class="success-icon">
+    <i class="fas fa-check-circle"></i>
   </div>
-  <script>
-    const order = JSON.parse(sessionStorage.getItem('lastOrder') || '{}');
-    if (!order.orderId) window.location.href = '/';
-    document.getElementById('orderId').innerText = order.orderId;
-    const subtotal = order.finalAmount - (order.gstAmount || 0);
-    document.getElementById('billDetails').innerHTML = `
-      <div class="bill-row"><span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
-      ${order.gstAmount ? `<div class="bill-row"><span>GST 18%</span><span>₹${order.gstAmount.toFixed(2)}</span></div>` : ''}
-      <div class="bill-row" style="font-weight:bold;font-size:1.2rem"><span>Total</span><span>₹${order.finalAmount.toFixed(2)}</span></div>
-    `;
-    function payAtCounter() { alert('Show this order ID at counter. Thank you!'); }
-    async function payOnline() {
-      const res = await fetch(`/api/orders/${order.orderId}/pay-online`, { method: 'POST' });
-      const data = await res.json();
-      if (data.success) alert(`Payment successful! Discount applied. Final: ₹${data.finalAmount}`);
-      else alert('Payment failed');
+  <h1>Order Confirmed!</h1>
+  <p style="color: #c9aa5f; font-size: 0.85rem;">Your order has been sent to the kitchen</p>
+  
+  <div>
+    <div class="order-id" id="orderId">---</div>
+    <button class="copy-btn" onclick="copyOrderId()"><i class="fas fa-copy"></i> Copy Order ID</button>
+  </div>
+  
+  <div class="bill-card" id="billDetails"></div>
+  
+  <div class="pay-options">
+    <button class="pay-btn" id="counterBtn" onclick="payAtCounter()">
+      <i class="fas fa-store"></i> Pay at Counter
+    </button>
+    <button class="pay-btn" id="onlineBtn" onclick="payOnline()">
+      <i class="fas fa-mobile-alt"></i> Pay Online <span style="font-size:0.7rem;">(2% off)</span>
+    </button>
+  </div>
+  
+  <a href="index.html" class="new-order-link">
+    <i class="fas fa-plus-circle"></i> Place New Order
+  </a>
+</div>
+
+<script>
+// IMPORTANT: Render Backend URL - YAHAN APNA RENDER URL DALO
+const API_BASE_URL = 'https://restaurant-web-wbq0.onrender.com';
+
+let isProcessing = false;
+
+// Get order data
+const order = JSON.parse(sessionStorage.getItem('lastOrder') || '{}');
+if (!order.orderId) {
+  window.location.href = 'index.html';
+}
+
+// Display order ID
+document.getElementById('orderId').innerText = order.orderId;
+
+// Calculate and display bill
+const subtotal = order.finalAmount - (order.gstAmount || 0);
+let billHtml = `
+  <div class="bill-row"><span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
+`;
+if (order.gstAmount && order.gstAmount > 0) {
+  billHtml += `<div class="bill-row"><span>GST 18%</span><span>₹${order.gstAmount.toFixed(2)}</span></div>`;
+} else {
+  billHtml += `<div class="bill-row"><span>GST</span><span style="color:#81C784">NIL</span></div>`;
+}
+billHtml += `<div class="bill-row total"><span>Total Amount</span><span>₹${order.finalAmount.toFixed(2)}</span></div>`;
+
+// Show discount info for online payment
+const discountedAmount = (order.finalAmount * 0.98).toFixed(2);
+billHtml += `<div class="bill-row" style="font-size:0.8rem; color:#81C784; border-bottom:none;">
+  <span><i class="fas fa-tag"></i> Online Payment</span>
+  <span>Pay ₹${discountedAmount} (2% off)</span>
+</div>`;
+
+document.getElementById('billDetails').innerHTML = billHtml;
+
+// Show toast notification
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Copy Order ID
+function copyOrderId() {
+  navigator.clipboard.writeText(order.orderId).then(() => {
+    showToast('Order ID copied!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy', 'error');
+  });
+}
+
+// Pay at Counter
+function payAtCounter() {
+  showToast(`✅ Order ${order.orderId} confirmed! Please show at counter.`, 'success');
+  // Optional: Send to backend that payment is pending at counter
+  setTimeout(() => {
+    if (confirm('Payment done at counter? Click OK to continue')) {
+      window.location.href = 'index.html';
     }
-  </script>
+  }, 2000);
+}
+
+// Pay Online
+async function payOnline() {
+  if (isProcessing) return;
+  isProcessing = true;
+  
+  const onlineBtn = document.getElementById('onlineBtn');
+  const originalText = onlineBtn.innerHTML;
+  onlineBtn.innerHTML = '<div class="spinner"></div> Processing...';
+  onlineBtn.disabled = true;
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/orders/${order.orderId}/pay-online`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      const finalAmount = data.finalAmount;
+      const discount = data.discount;
+      showToast(`✅ Payment successful! Discount: ₹${discount.toFixed(2)} | Final: ₹${finalAmount.toFixed(2)}`, 'success');
+      
+      // Update displayed amount
+      const totalRow = document.querySelector('.bill-row.total span:last-child');
+      if (totalRow) totalRow.innerText = `₹${finalAmount.toFixed(2)}`;
+      
+      onlineBtn.innerHTML = '<i class="fas fa-check-circle"></i> Paid Successfully';
+      onlineBtn.style.background = 'rgba(76, 175, 80, 0.3)';
+      onlineBtn.style.borderColor = '#4CAF50';
+      
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 3000);
+    } else {
+      showToast(data.message || 'Payment failed. Please try again.', 'error');
+      onlineBtn.innerHTML = originalText;
+      onlineBtn.disabled = false;
+    }
+  } catch (error) {
+    console.error('Payment error:', error);
+    showToast('Network error. Please try again.', 'error');
+    onlineBtn.innerHTML = originalText;
+    onlineBtn.disabled = false;
+  }
+  
+  isProcessing = false;
+}
+</script>
 </body>
 </html>
