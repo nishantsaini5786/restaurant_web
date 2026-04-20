@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen - BHOSDIKA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Inter&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { background: #0a0505; font-family: 'Inter', sans-serif; color: #f5e7d9; padding: 2rem; }
+    .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 1.5rem; margin-top: 2rem; }
+    .kitchen-card { background: #1f1111; border-radius: 1rem; padding: 1rem; border-left: 4px solid #D4AF37; }
+    .order-id { font-family: 'Cinzel', serif; color: #D4AF37; }
+    button { background: #D4AF37; border: none; padding: 5px 12px; border-radius: 20px; cursor: pointer; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1><i class="fas fa-fire-burner"></i> Kitchen Live Orders</h1>
+  <div class="orders-grid" id="kitchenOrders"></div>
+  <script>
+    async function loadOrders() {
+      const res = await fetch('/api/admin/orders?status=pending&limit=30');
+      const data = await res.json();
+      document.getElementById('kitchenOrders').innerHTML = data.orders.map(o => `
+        <div class="kitchen-card">
+          <div class="order-id">${o.orderId}</div>
+          <div><strong>${o.customerName}</strong> | Table ${o.tableNumber}</div>
+          <div>${o.items.map(i=>`${i.name} x${i.quantity}`).join(', ')}</div>
+          <button onclick="markReady('${o.orderId}')">✅ Mark Ready</button>
+        </div>
+      `).join('');
+    }
+    async function markReady(id) {
+      await fetch(`/api/admin/orders/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderStatus: 'completed' }) });
+      loadOrders();
+    }
+    loadOrders();
+    setInterval(loadOrders, 8000);
+  </script>
+</body>
+</html>

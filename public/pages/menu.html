@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu - BHOSDIKA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0505;
+      color: #f5e7d9;
+    }
+    .top-nav {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 5, 5, 0.95);
+      backdrop-filter: blur(12px);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+      z-index: 100;
+    }
+    .nav-brand {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, #F0D060, #D4AF37);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .cart-btn {
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid #D4AF37;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #D4AF37;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cart-btn:hover { background: rgba(212, 175, 55, 0.3); }
+    .menu-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 0;
+      min-height: calc(100vh - 65px);
+    }
+    .menu-side { padding: 2rem; overflow-y: auto; }
+    .category-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .cat-tab {
+      padding: 8px 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 40px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.85rem;
+    }
+    .cat-tab.active, .cat-tab:hover { background: rgba(212,175,55,0.2); border-color: #D4AF37; color: #F0D060; }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.2rem;
+    }
+    .menu-item {
+      background: linear-gradient(145deg, #1f1111, #140a0a);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 1rem;
+      padding: 1rem;
+      transition: 0.2s;
+    }
+    .menu-item:hover { transform: translateY(-5px); border-color: #D4AF37; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .item-name { font-family: 'Cinzel', serif; font-size: 1rem; margin-bottom: 5px; }
+    .item-desc { font-size: 0.7rem; color: #c9aa5f; margin-bottom: 10px; }
+    .item-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .item-price { color: #D4AF37; font-weight: bold; }
+    .qty-control { display: flex; gap: 8px; align-items: center; }
+    .qty-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(212,175,55,0.2);
+      border: none;
+      color: #D4AF37;
+      cursor: pointer;
+    }
+    .cart-side {
+      background: #0f0808;
+      border-left: 1px solid rgba(212,175,55,0.3);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 65px);
+      position: sticky;
+      top: 65px;
+    }
+    .cart-header { padding: 1.5rem; border-bottom: 1px solid rgba(212,175,55,0.2); }
+    .cart-items { flex: 1; overflow-y: auto; padding: 1rem; }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .cart-summary { padding: 1.5rem; border-top: 1px solid rgba(212,175,55,0.2); }
+    .btn-order {
+      width: 100%;
+      background: linear-gradient(95deg, #B8860B, #D4AF37);
+      border: none;
+      padding: 12px;
+      border-radius: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    @media (max-width: 900px) {
+      .menu-layout { grid-template-columns: 1fr; }
+      .cart-side { position: fixed; right: 0; top: 0; width: 350px; transform: translateX(100%); transition: 0.3s; z-index: 200; height: 100vh; }
+      .cart-side.open { transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-brand">BHOSDIKA</div>
+    <button class="cart-btn" onclick="toggleCart()"><i class="fas fa-shopping-cart"></i> Cart (<span id="cartCount">0</span>)</button>
+  </nav>
+  <div class="menu-layout">
+    <div class="menu-side">
+      <div class="category-tabs" id="categoryTabs"></div>
+      <div class="menu-grid" id="menuGrid"></div>
+    </div>
+    <div class="cart-side" id="cartSide">
+      <div class="cart-header"><h3><i class="fas fa-utensils"></i> Your Order</h3></div>
+      <div class="cart-items" id="cartItemsList"></div>
+      <div class="cart-summary" id="cartSummary"></div>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:1000;"></div>
+
+  <script>
+    const menuData = [
+      { id:1, name:'Paneer Tikka', desc:'Grilled cottage cheese', price:249, cat:'Starters', emoji:'🔥' },
+      { id:2, name:'Butter Chicken', desc:'Creamy tomato gravy', price:349, cat:'Mains', emoji:'🍗' },
+      { id:3, name:'Dal Makhani', desc:'Slow cooked black lentils', price:249, cat:'Mains', emoji:'🫕' },
+      { id:4, name:'Garlic Naan', desc:'Fresh baked', price:59, cat:'Breads', emoji:'🫓' },
+      { id:5, name:'Chicken Biryani', desc:'Hyderabadi style', price:379, cat:'Rice', emoji:'🍛' },
+      { id:6, name:'Gulab Jamun', desc:'Sweet dessert', price:129, cat:'Desserts', emoji:'🍮' },
+      { id:7, name:'Mango Lassi', desc:'Yogurt drink', price:99, cat:'Drinks', emoji:'🥭' }
+    ];
+    let cart = {};
+    let activeCat = 'All';
+    const customer = JSON.parse(sessionStorage.getItem('customerData') || '{}');
+    if (!customer.name) window.location.href = '/';
+
+    function renderMenu() {
+      const items = activeCat === 'All' ? menuData : menuData.filter(i => i.cat === activeCat);
+      const grid = document.getElementById('menuGrid');
+      grid.innerHTML = items.map(item => `
+        <div class="menu-item">
+          <div style="font-size:2rem">${item.emoji}</div>
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">${item.desc}</div>
+          <div class="item-footer">
+            <span class="item-price">₹${item.price}</span>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
+              <span id="qty-${item.id}">${cart[item.id]?.qty || 0}</span>
+              <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function changeQty(id, delta) {
+      const item = menuData.find(i => i.id === id);
+      const current = cart[id]?.qty || 0;
+      const newQty = current + delta;
+      if (newQty <= 0) delete cart[id];
+      else cart[id] = { ...item, qty: newQty };
+      renderMenu();
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const items = Object.values(cart);
+      const totalQty = items.reduce((s, i) => s + i.qty, 0);
+      document.getElementById('cartCount').innerText = totalQty;
+      const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+      const gst = customer.tableType === '5 Star' ? subtotal * 0.18 : 0;
+      const total = subtotal + gst;
+      document.getElementById('cartItemsList').innerHTML = items.map(i => `
+        <div class="cart-item"><span>${i.name} x${i.qty}</span><span>₹${i.price * i.qty}</span></div>
+      `).join('') || '<div style="text-align:center;padding:2rem">Cart empty</div>';
+      document.getElementById('cartSummary').innerHTML = `
+        <div>Subtotal: ₹${subtotal}</div>
+        ${gst ? `<div>GST 18%: ₹${gst.toFixed(2)}</div>` : ''}
+        <div style="font-size:1.2rem;font-weight:bold;margin:10px 0">Total: ₹${total.toFixed(2)}</div>
+        <button class="btn-order" onclick="placeOrder()">Place Order →</button>
+      `;
+    }
+
+    async function placeOrder() {
+      const items = Object.values(cart);
+      if (items.length === 0) return alert('Add items first');
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: customer.name,
+          mobile: customer.mobile,
+          members: customer.members,
+          tableType: customer.tableType,
+          tableNumber: customer.tableNumber,
+          items: items.map(i => ({ name: i.name, price: i.price, quantity: i.qty }))
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        sessionStorage.setItem('lastOrder', JSON.stringify(data));
+        window.location.href = '/payment';
+      }
+    }
+
+    function toggleCart() { document.getElementById('cartSide').classList.toggle('open'); }
+    const cats = ['All', ...new Set(menuData.map(i => i.cat))];
+    document.getElementById('categoryTabs').innerHTML = cats.map(c => `<button class="cat-tab ${c === 'All' ? 'active' : ''}" onclick="activeCat='${c}';renderMenu();document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active')">${c}</button>`).join('');
+    renderMenu(); updateCartUI();
+  </script>
+</body>
+</html>

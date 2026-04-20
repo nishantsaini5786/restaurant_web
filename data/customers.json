@@ -1,0 +1,52 @@
+[
+  {
+    "customerId": "CUSTMO7J3A21",
+    "name": "krishna saini",
+    "mobile": "9412350579",
+    "totalVisits": 1,
+    "totalSpent": 426,
+    "lastVisit": "2026-04-20T18:28:35.113Z",
+    "favoriteItems": [
+      "Paneer Tikka",
+      "Garlic Naan"
+    ],
+    "createdAt": "2026-04-20T18:28:35.113Z"
+  },
+  {
+    "customerId": "CUSTMO7J9Z58",
+    "name": "NISHANT SAINI",
+    "mobile": "9625700719",
+    "totalVisits": 1,
+    "totalSpent": 8926.7,
+    "lastVisit": "2026-04-20T18:33:47.564Z",
+    "favoriteItems": [
+      "Paneer Tikka",
+      "Butter Chicken",
+      "Dal Makhani",
+      "Garlic Naan",
+      "Chicken Biryani",
+      "Gulab Jamun",
+      "Mango Lassi"
+    ],
+    "createdAt": "2026-04-20T18:33:47.564Z"
+  },
+  {
+    "customerId": "CUSTMO7JNOXK",
+    "name": "NISHANT SAINI",
+    "mobile": "8535030719",
+    "totalVisits": 1,
+    "totalSpent": 1516.3,
+    "lastVisit": "2026-04-20T18:44:27.512Z",
+    "favoriteItems": [
+      "Paneer Tikka",
+      "Butter Chicken",
+      "Dal Makhani",
+      "Garlic Naan",
+      "Chicken Biryani"
+    ],
+    "orderHistory": [
+      "ORDMO7JNOFS435"
+    ],
+    "createdAt": "2026-04-20T18:44:27.513Z"
+  }
+]

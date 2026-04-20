@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>BHOSDIKA | Royal Dining Experience</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0505;
+      color: #f5e7d9;
+      overflow-x: hidden;
+    }
+
+    /* 3D Canvas Background */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .content {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+    }
+
+    /* Animated floating food images */
+    .floating-food {
+      position: fixed;
+      pointer-events: none;
+      z-index: 5;
+      font-size: 2.5rem;
+      animation: floatAround 20s infinite linear;
+      opacity: 0.15;
+    }
+
+    @keyframes floatAround {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(30px, -40px) rotate(5deg); }
+      50% { transform: translate(-20px, -80px) rotate(-5deg); }
+      75% { transform: translate(40px, -30px) rotate(3deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    .hero-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .hero-card {
+      background: rgba(10, 5, 5, 0.85);
+      backdrop-filter: blur(20px);
+      border-radius: 2rem;
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 30px rgba(212,175,55,0.2);
+      padding: 2rem 2rem 2.5rem;
+      max-width: 550px;
+      width: 100%;
+      animation: slideUpFade 0.8s ease-out;
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .flame-row {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .flame-row i {
+      color: #D4AF37;
+      font-size: 2rem;
+      animation: firePulse 1.5s infinite;
+      filter: drop-shadow(0 0 8px rgba(212,175,55,0.6));
+    }
+
+    @keyframes firePulse {
+      0%, 100% { opacity: 0.9; transform: scale(1); text-shadow: 0 0 2px #ffb347; }
+      50% { opacity: 1; transform: scale(1.1); text-shadow: 0 0 15px #ff7700; }
+    }
+
+    .restaurant-name {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 2.8rem;
+      background: linear-gradient(135deg, #F0D060, #D4AF37, #B8860B);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-align: center;
+      letter-spacing: 4px;
+    }
+
+    .restaurant-sub {
+      text-align: center;
+      font-size: 0.7rem;
+      letter-spacing: 6px;
+      color: #c9aa5f;
+      margin-top: -5px;
+    }
+
+    .gold-divider {
+      width: 100px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+      margin: 1rem auto;
+    }
+
+    .form-card h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: #D4AF37;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      letter-spacing: 2px;
+    }
+
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #c9aa5f;
+      margin-bottom: 6px;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(30, 15, 15, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 12px;
+      color: #f5e7d9;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #D4AF37;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 8px;
+    }
+    .radio-option { flex: 1; text-align: center; }
+    .radio-option input { display: none; }
+    .radio-option label {
+      display: block;
+      padding: 10px;
+      background: rgba(255,255,240,0.05);
+      border: 1px solid rgba(212,175,55,0.4);
+      border-radius: 40px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.8rem;
+    }
+    .radio-option input:checked + label {
+      background: rgba(212,175,55,0.2);
+      border-color: #D4AF37;
+      color: #F0D060;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(95deg, #B8860B, #D4AF37);
+      border: none;
+      padding: 14px;
+      font-family: 'Cinzel', serif;
+      font-weight: bold;
+      font-size: 1rem;
+      color: #1e0a0a;
+      border-radius: 40px;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-primary:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 25px rgba(212,175,55,0.5);
+    }
+
+    .gst-note {
+      margin-top: 1rem;
+      padding: 10px;
+      background: rgba(212,175,55,0.1);
+      border-radius: 10px;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    .bottom-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .bottom-links a {
+      color: #c9aa5f;
+      text-decoration: none;
+      font-size: 0.75rem;
+      transition: 0.2s;
+    }
+    .bottom-links a:hover { color: #D4AF37; }
+
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      animation: slideIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toast.success { background: #2e7d32; color: white; }
+    .toast.error { background: #c62828; color: white; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @media (max-width: 550px) {
+      .hero-card { padding: 1.5rem; }
+      .restaurant-name { font-size: 2rem; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<!-- Floating Food Icons for extra flair -->
+<div class="floating-food" style="top: 10%; left: 5%; animation-duration: 25s;">🍕</div>
+<div class="floating-food" style="top: 70%; left: 85%; animation-duration: 18s;">🍔</div>
+<div class="floating-food" style="top: 40%; left: 90%; animation-duration: 22s;">🍜</div>
+<div class="floating-food" style="top: 80%; left: 10%; animation-duration: 30s;">🍣</div>
+<div class="floating-food" style="top: 20%; left: 92%; animation-duration: 20s;">🥘</div>
+
+<div class="content">
+  <div class="hero-section">
+    <div class="hero-card">
+      <div class="flame-row">
+        <i class="fas fa-fire"></i>
+        <i class="fas fa-utensils"></i>
+        <i class="fas fa-crown"></i>
+        <i class="fas fa-fire"></i>
+      </div>
+      <div class="restaurant-name">BHOSDIKA</div>
+      <div class="restaurant-sub">✦ ROYAL CUISINE ✦</div>
+      <div class="gold-divider"></div>
+
+      <div class="form-card">
+        <h2><i class="fas fa-concierge-bell"></i> Reserve Your Royal Table</h2>
+        <form id="customerForm">
+          <div class="form-group">
+            <label><i class="fas fa-user"></i> Full Name</label>
+            <input type="text" id="fullName" placeholder="Enter your name" autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-phone"></i> Mobile Number</label>
+            <input type="tel" id="mobile" placeholder="10-digit mobile" maxlength="10">
+          </div>
+          <div class="two-col">
+            <div class="form-group">
+              <label><i class="fas fa-users"></i> Members</label>
+              <select id="members">
+                <option value="">Select</option>
+                <option>1</option><option>2</option><option>3</option><option>4</option>
+                <option>5</option><option>6</option><option>7</option><option>8</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-chair"></i> Table No.</label>
+              <select id="tableNumber">
+                <option value="">Select</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-star"></i> Table Type</label>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input type="radio" name="tableType" id="t2" value="2 Star">
+                <label for="t2"><i class="fas fa-star"></i> 2 Star</label>
+              </div>
+              <div class="radio-option">
+                <input type="radio" name="tableType" id="t4" value="4 Star">
+                <label for="t4"><i class="fas fa-star-half-alt"></i> 4 Star</label>
+              </div>
+              <div class="radio-option">
+                <input type="radio" name="tableType" id="t5" value="5 Star">
+                <label for="t5"><i class="fas fa-crown"></i> 5 Star</label>
+              </div>
+            </div>
+          </div>
+          <div class="gst-note" id="gstNote" style="display: none;">
+            <i class="fas fa-info-circle"></i> <span id="gstText"></span>
+          </div>
+          <button type="submit" class="btn-primary" id="submitBtn">
+            <i class="fas fa-arrow-right"></i> Enter the Royal Feast
+          </button>
+        </form>
+        <div class="bottom-links">
+          <a href="/admin"><i class="fas fa-lock"></i> Admin</a>
+          <a href="/kitchen"><i class="fas fa-fire-burner"></i> Kitchen</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+    }
+  }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+
+  // --- 3D Scene Setup ---
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050202);
+  scene.fog = new THREE.FogExp2(0x050202, 0.008);
+
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 2, 8);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x332222);
+  scene.add(ambientLight);
+  const mainLight = new THREE.DirectionalLight(0xffcc88, 1);
+  mainLight.position.set(2, 5, 3);
+  scene.add(mainLight);
+  const backLight = new THREE.PointLight(0xd4af37, 0.5);
+  backLight.position.set(-1, 2, -3);
+  scene.add(backLight);
+  const fillLight = new THREE.PointLight(0xaa6644, 0.4);
+  fillLight.position.set(1, 1, 2);
+  scene.add(fillLight);
+
+  // Floating glowing particles
+  const particleCount = 800;
+  const particlesGeometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    positions[i*3] = (Math.random() - 0.5) * 30;
+    positions[i*3+1] = (Math.random() - 0.5) * 15;
+    positions[i*3+2] = (Math.random() - 0.5) * 20 - 10;
+  }
+  particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const particlesMaterial = new THREE.PointsMaterial({ color: 0xd4af37, size: 0.05, transparent: true, opacity: 0.4 });
+  const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+  scene.add(particles);
+
+  // Rotating gold ring
+  const ringGeo = new THREE.TorusGeometry(1.2, 0.05, 64, 300);
+  const ringMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, emissive: 0x442200, metalness: 0.9, roughness: 0.3 });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.y = 0.5;
+  scene.add(ring);
+
+  // Floating food models (spheres with emoji textures)
+  const foodItems = ['🍕', '🍔', '🍜', '🥘', '🍣'];
+  const foodSpheres = [];
+  foodItems.forEach((emoji, idx) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#1a0a0a';
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.font = '80px "Segoe UI Emoji"';
+    ctx.fillStyle = '#D4AF37';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, 64, 68);
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.MeshStandardMaterial({ map: texture, transparent: true });
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.45, 32, 32), material);
+    sphere.position.set((idx - 2) * 1.3, Math.sin(idx) * 0.8, -2);
+    scene.add(sphere);
+    foodSpheres.push(sphere);
+  });
+
+  // Animation loop
+  let time = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    time += 0.012;
+    ring.rotation.x = Math.sin(time * 0.5) * 0.3;
+    ring.rotation.y = time * 0.8;
+    ring.rotation.z = Math.cos(time * 0.3) * 0.2;
+    particles.rotation.y = time * 0.05;
+    particles.rotation.x = Math.sin(time * 0.1) * 0.1;
+    foodSpheres.forEach((s, i) => {
+      s.position.y = Math.sin(time * 1.2 + i) * 0.2;
+      s.rotation.y = time;
+    });
+    camera.position.x = Math.sin(time * 0.1) * 0.2;
+    camera.lookAt(0, 0.5, 0);
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // --- Form Logic ---
+  // Populate tables 1-50
+  const tableSelect = document.getElementById('tableNumber');
+  for (let i = 1; i <= 50; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `Table ${i}`;
+    tableSelect.appendChild(opt);
+  }
+
+  // GST note on table type change
+  document.querySelectorAll('input[name="tableType"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const gstNote = document.getElementById('gstNote');
+      const gstText = document.getElementById('gstText');
+      gstNote.style.display = 'block';
+      if (radio.value === '5 Star') {
+        gstText.innerHTML = '✨ 5 Star table includes 18% GST on your bill ✨';
+      } else {
+        gstText.innerHTML = `${radio.value} table — No GST applied`;
+      }
+    });
+  });
+
+  // Mobile digits only
+  document.getElementById('mobile').addEventListener('input', function(e) {
+    this.value = this.value.replace(/\D/g, '');
+  });
+
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+
+  document.getElementById('customerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('fullName').value.trim();
+    const mobile = document.getElementById('mobile').value.trim();
+    const members = document.getElementById('members').value;
+    const tableNumber = document.getElementById('tableNumber').value;
+    const tableType = document.querySelector('input[name="tableType"]:checked')?.value;
+
+    if (!name || !mobile || !members || !tableNumber || !tableType) {
+      showToast('Please fill all fields', 'error');
+      return;
+    }
+    if (!/^\d{10}$/.test(mobile)) {
+      showToast('Enter valid 10-digit mobile', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border:2px solid #fff;border-top-color:#B8860B;border-radius:50%;animation:spin 0.6s linear infinite;"></div> Loading...';
+
+    const customerData = { name, mobile, members, tableType, tableNumber };
+    sessionStorage.setItem('customerData', JSON.stringify(customerData));
+
+    setTimeout(() => {
+      window.location.href = '/menu';
+    }, 600);
+  });
+</script>
+</body>
+</html>
