@@ -1,15 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
 const Order = require('../models/Order');
-const { addOrderToSheet, updateOrderInSheet } = require('../config/googleSheets');
+const Customer = require('../models/Customer');
 
-// Generate short order ID: BHO-YYYYMMDD-XXXX
+// Generate short order ID: ORD-YYYYMMDD-XXXX
 function generateOrderId() {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
   const randomPart = Math.floor(1000 + Math.random() * 9000);
-  return `BHO-${dateStr}-${randomPart}`;
+  return `ORD-${dateStr}-${randomPart}`;
+}
+
+// Generate Customer ID
+function generateCustomerId() {
+  const date = new Date();
+  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+  const randomPart = Math.floor(100 + Math.random() * 900);
+  return `CUST-${dateStr}-${randomPart}`;
 }
 
 // POST /api/orders - Place new order
@@ -60,13 +67,36 @@ router.post('/', async (req, res) => {
     });
 
     await order.save();
+    console.log(`✅ Order saved: ${orderId} - ${customerName} - ₹${finalAmount}`);
 
-    // Sync to Google Sheets (non-blocking)
-    addOrderToSheet(order).then(rowNum => {
-      if (rowNum) {
-        Order.findByIdAndUpdate(order._id, { sheetRowIndex: rowNum }).catch(console.error);
-      }
-    }).catch(console.error);
+    // Update or Create Customer
+    let customer = await Customer.findOne({ mobile });
+    
+    if (customer) {
+      // Existing customer - Update stats
+      customer.totalVisits += 1;
+      customer.totalSpent += finalAmount;
+      customer.lastVisit = new Date();
+      const currentItems = items.map(i => i.name);
+      customer.favoriteItems = [...new Set([...customer.favoriteItems, ...currentItems])];
+      customer.orderHistory.push(orderId);
+      await customer.save();
+      console.log(`📊 Customer updated: ${customer.name} (Visit #${customer.totalVisits})`);
+    } else {
+      // New customer - Create
+      const newCustomer = new Customer({
+        customerId: generateCustomerId(),
+        name: customerName.trim(),
+        mobile,
+        totalVisits: 1,
+        totalSpent: finalAmount,
+        lastVisit: new Date(),
+        favoriteItems: items.map(i => i.name),
+        orderHistory: [orderId]
+      });
+      await newCustomer.save();
+      console.log(`🆕 New customer saved: ${customerName} (${mobile})`);
+    }
 
     res.status(201).json({
       success: true,
@@ -90,6 +120,7 @@ router.get('/:orderId', async (req, res) => {
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
     res.json({ success: true, order });
   } catch (error) {
+    console.error('Fetch order error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -111,8 +142,7 @@ router.post('/:orderId/pay-online', async (req, res) => {
     order.finalAmount = discountedAmount;
     await order.save();
 
-    // Update Google Sheet
-    updateOrderInSheet(order.orderId, { paymentStatus: 'paid_online' }).catch(console.error);
+    console.log(`💰 Payment successful for ${order.orderId}: ₹${discountedAmount} (Saved ₹${discount})`);
 
     res.json({
       success: true,
@@ -122,6 +152,7 @@ router.post('/:orderId/pay-online', async (req, res) => {
       orderId: order.orderId
     });
   } catch (error) {
+    console.error('Payment error:', error);
     res.status(500).json({ success: false, message: 'Payment failed' });
   }
 });
