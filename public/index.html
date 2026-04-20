@@ -262,7 +262,7 @@
 
 <div id="canvas-container"></div>
 
-<!-- Floating Food Icons for extra flair -->
+<!-- Floating Food Icons -->
 <div class="floating-food" style="top: 10%; left: 5%; animation-duration: 25s;">🍕</div>
 <div class="floating-food" style="top: 70%; left: 85%; animation-duration: 18s;">🍔</div>
 <div class="floating-food" style="top: 40%; left: 90%; animation-duration: 22s;">🍜</div>
@@ -334,8 +334,8 @@
           </button>
         </form>
         <div class="bottom-links">
-          <a href="/admin"><i class="fas fa-lock"></i> Admin</a>
-          <a href="/kitchen"><i class="fas fa-fire-burner"></i> Kitchen</a>
+          <a href="admin.html"><i class="fas fa-lock"></i> Admin</a>
+          <a href="kitchen.html"><i class="fas fa-fire-burner"></i> Kitchen</a>
         </div>
       </div>
     </div>
@@ -404,7 +404,7 @@
   ring.position.y = 0.5;
   scene.add(ring);
 
-  // Floating food models (spheres with emoji textures)
+  // Floating food models
   const foodItems = ['🍕', '🍔', '🍜', '🥘', '🍣'];
   const foodSpheres = [];
   foodItems.forEach((emoji, idx) => {
@@ -516,7 +516,7 @@
     sessionStorage.setItem('customerData', JSON.stringify(customerData));
 
     setTimeout(() => {
-      window.location.href = '/menu';
+      window.location.href = 'menu.html';
     }, 600);
   });
 </script>
